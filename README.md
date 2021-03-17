@@ -11,9 +11,10 @@
 
 ## 组件版本
 
-* v2ray：v4.34.0
-* Caddy：v2.3.0
-* alpine：latest
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.6
+* v2ray: v4.34.0
+* Caddy: v2.3.0
+* alpine: latest
 
 ## 使用方法
 
@@ -29,7 +30,7 @@ bash get-docker.sh
   ##### 1. 务必替换自己的域名（YOURDOMAIN.COM）。
   ##### 2. 可留空（会自动生成）或自行替换 uuid （0890b53a-e3d4-4726-bd2b-52574e8588c4）和 ws path （3o38nn5h）。
 ```
-sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.5.1 YOURDOMAIN.COM V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h && sleep 3s && sudo docker logs v2ray
+sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.6 YOURDOMAIN.COM V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h && sleep 3s && sudo docker logs v2ray
 ```
 * 查看 Docker
 ```
@@ -54,11 +55,12 @@ sudo docker stop v2ray
 * Auto generate vmess link and qrcode for shadowrocket on iOS
 * Block access from nonessential files
 
-## Verions
+## Component Verions
 
-* v2ray：v4.34.0
-* Caddy：v2.3.0
-* alpine：latest
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.6
+* v2ray:v4.34.0
+* Caddy:v2.3.0
+* alpine:latest
 
 ## How To Run
 
@@ -74,7 +76,7 @@ bash get-docker.sh
   ##### 1. Must replace YOURDOMAIN.COM with your domain.
   ##### 2. Keep uuid (0890b53a-e3d4-4726-bd2b-52574e8588c4) and ws path (3o38nn5h) empty (will be auto-generated) or replace them by your own.
 ```
-sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.5.1 YOURDOMAIN.COM V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h && sleep 3s && sudo docker logs v2ray
+sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.6 YOURDOMAIN.COM V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h && sleep 3s && sudo docker logs v2ray
 ```
 * Check Docker
 ```
