@@ -1,7 +1,7 @@
 #
 # Builder
 #
-FROM golang:1.14-alpine as builder
+FROM golang:1.16.2-alpine as builder
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
@@ -21,7 +21,7 @@ RUN VERSION=${version} PLUGINS=${plugins} ENABLE_TELEMETRY=${enable_telemetry} /
 #
 # Final stage
 #
-FROM alpine:latest
+FROM alpine:3.13
 # process wrapper
 LABEL maintainer "sebs sebsclub@outlook.com"
 
@@ -102,6 +102,7 @@ COPY index.html /srv/index.html
 # install process wrapper
 COPY --from=builder /go/bin/parent /bin/parent
 ADD caddy.sh /caddy.sh
+RUN ["chmod", "+x", "/caddy.sh"]
 EXPOSE 443 80
 ENTRYPOINT ["/caddy.sh"]
 # CMD ["--conf", "/etc/Caddyfile", "--log", "stdout", "--agree=$ACME_AGREE"]

@@ -19,7 +19,8 @@ fi
 # add `v` prefix for version numbers
 [ "$(echo $VERSION | cut -c1)" -ge 0 ] 2>/dev/null && VERSION="v$VERSION"
 
-git config --global url."https://hub.fastgit.org".insteadOf https://github.com
+#https://github.com.cnpmjs.org https://hub.fastgit.org https://github.wuyanzheshui.workers.dev
+git config --global url."https://github.wuyanzheshui.workers.dev".insteadOf https://github.com
 
 stage() {
     STAGE="$1"
