@@ -11,8 +11,8 @@
 
 ## 组件版本
 
-* dockerhub: c258c4fff5f9/v2ray_ws:v0.7
-* v2ray: v4.34.0
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.7.1
+* v2ray: v4.36.2
 * Caddy: v2.3.0
 * alpine: v3.13
 * golang: v1.16.2
@@ -30,13 +30,13 @@
 * 启动 Docker
   ##### 1. 命令行参数：
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path(path)] [user_alertId(aid)] && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7.1 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path(path)] [user_alertId(aid)] && sleep 3s && sudo docker logs v2ray
   ```
   ##### 2. 务必将 ws_domain 替换成自己的域名，如 www.yourdomain.com。
   ##### 3. 可留空（将会自动生成）或自行替换 user_id （如 0890b53a-e3d4-4726-bd2b-52574e8588c4）、 ws_path （如 3o38nn5h）和 user_alertId (如 64)。
   ##### 4. 完整示例： 
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 64 && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7.1 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 64 && sleep 3s && sudo docker logs v2ray
   ```
 * 查看 Docker
   ```
@@ -63,8 +63,8 @@
 
 ## Component Verions
 
-* dockerhub: c258c4fff5f9/v2ray_ws:v0.7
-* v2ray: v4.34.0
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.7.1
+* v2ray: v4.36.2
 * Caddy: v2.3.0
 * alpine: v3.13
 * golang: v1.16.2
@@ -82,13 +82,13 @@
 * Start Docker
   ##### 1. Command line arguments:
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path(path)] [user_alertId(aid)] && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7.1 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path(path)] [user_alertId(aid)] && sleep 3s && sudo docker logs v2ray
   ```
   ##### 2. Must replace ws_domain with your domain, e.g. www.yourdomain.com.
   ##### 3. Keep user_id (e.g. 0890b53a-e3d4-4726-bd2b-52574e8588c4), ws_path (e.g. 3o38nn5h) and user_alertId (e.g. 64) empty (which will be auto-generated) or replace them by your own.
   ##### 4. Full example:
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 64 && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.7.1 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 64 && sleep 3s && sudo docker logs v2ray
   ```
 * Check Docker
   ```

@@ -1,51 +1,46 @@
+ARG CADDY_VERSION="2.3.0"
+ARG GOLANG_IMAGE_VERSION="1.16.2-alpine"
+ARG ALPINE_IMAGE_VERSION="3.13"
+
 #
 # Builder
 #
-FROM golang:1.16.2-alpine as builder
+FROM caddy:${CADDY_VERSION}-alpine as caddy-builder
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
-
-RUN apk add --no-cache git gcc musl-dev
-
-# add this line before you run `/bin/sh /usr/bin/builder.sh`
-ADD caddy-builder.sh /usr/bin/builder.sh
-
-ARG version="2.3.0"
-ARG plugins=""
-ARG enable_telemetry="false"
-
+FROM golang:${GOLANG_IMAGE_VERSION} as go-builder
 
 RUN go get -v github.com/abiosoft/parent
-RUN VERSION=${version} PLUGINS=${plugins} ENABLE_TELEMETRY=${enable_telemetry} /bin/sh /usr/bin/builder.sh
 
 #
 # Final stage
 #
-FROM alpine:3.13
-# process wrapper
-LABEL maintainer "sebs sebsclub@outlook.com"
+FROM alpine:${ALPINE_IMAGE_VERSION}
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+ARG LOCAL_MODE
+ENV LOCAL_MODE=${LOCAL_MODE:-"false"}
+
+RUN if [ "${LOCAL_MODE}" = "true" ]; then sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories; fi
 
 # V2RAY
-ARG TZ="Asia/Shanghai" 
+ARG V2RAY_VERSION
+ENV V2RAY_INSTALL_VERSION=${V2RAY_VERSION:-"4.36.2"}
 
-ENV TZ ${TZ}
-ENV V2RAY_VERSION v4.34.0
-ENV V2RAY_LOG_DIR /var/log/v2ray
-ENV V2RAY_CONFIG_DIR /etc/v2ray/
-ENV V2RAY_DOWNLOAD_URL https://github.com/v2fly/v2ray-core/releases/download/${V2RAY_VERSION}/v2ray-linux-64.zip
+ARG V2RAY_GITHUB="https://github.com/v2fly/v2ray-core/releases/download/v${V2RAY_INSTALL_VERSION}/v2ray-linux-64.zip"
+ARG V2RAY_FAST_GIT="https://download.fastgit.org/v2fly/v2ray-core/releases/download/v${V2RAY_INSTALL_VERSION}/v2ray-linux-64.zip"
+
+ARG TIME_ZONE 
+ENV SYSTEM_TIME_ZONE=${TIME_ZONE:-"Asia/Shanghai"}
 
 RUN apk upgrade --update \
     && apk add \
         bash \
         tzdata \
-        curl \
+        # curl \
     && mkdir -p \ 
-        ${V2RAY_LOG_DIR} \
-        ${V2RAY_CONFIG_DIR} \
+       # /var/log/v2ray/ \
+        /etc/v2ray/ \
         /tmp/v2ray \
-    && curl -L -H "Cache-Control: no-cache" -o /tmp/v2ray/v2ray.zip ${V2RAY_DOWNLOAD_URL} \
+    && if [ "$LOCAL_MODE" = "false" ]; then wget --no-cache -O /tmp/v2ray/v2ray.zip ${V2RAY_GITHUB}; else wget --no-cache -O /tmp/v2ray/v2ray.zip ${V2RAY_FAST_GIT}; fi \
     && pwd \
     && unzip /tmp/v2ray/v2ray.zip -d /tmp/v2ray/ \
     && mv /tmp/v2ray/v2ray /usr/bin \
@@ -53,9 +48,9 @@ RUN apk upgrade --update \
     && mv /tmp/v2ray/vpoint_vmess_freedom.json /etc/v2ray/config.json \
     && chmod +x /usr/bin/v2ray \
     && chmod +x /usr/bin/v2ctl \
-    && apk del curl \
-    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
-    && echo ${TZ} > /etc/timezone \
+    # && apk del curl \
+    && ln -sf /usr/share/zoneinfo/${SYSTEM_TIME_ZONE} /etc/localtime \
+    && echo ${SYSTEM_TIME_ZONE} > /etc/timezone \
     && rm -rf /tmp/v2ray /var/cache/apk/*
 
 # ADD entrypoint.sh /entrypoint.sh
@@ -65,18 +60,17 @@ WORKDIR /srv
 RUN apk add --no-cache util-linux
 RUN apk add --update nodejs nodejs-npm
 COPY package.json /srv/package.json
-RUN  npm install
-COPY  v2ray.js /srv/v2ray.js
+RUN npm install
+COPY v2ray.js /srv/v2ray.js
 
-ARG version="2.3.0"
-LABEL caddy_version="$version"
-ENV CADDY_VERSION="$version"
+ARG CADDY_VERSION
+ENV CADDY_INSTALL_VERSION=${CADDY_VERSION:-"2.3.0"}
 
-# Let's Encrypt Agreement
-ENV ACME_AGREE="false"
+ARG GOLANG_IMAGE_VERSION
+ENV GOLANG_IMAGE_VERSION="$GOLANG_IMAGE_VERSION"
 
-# Telemetry Stats
-ENV ENABLE_TELEMETRY="$enable_telemetry"
+ARG ALPINE_IMAGE_VERSION
+ENV ALPINE_IMAGE_VERSION="$ALPINE_IMAGE_VERSION"
 
 RUN apk add --no-cache \
     ca-certificates \
@@ -86,7 +80,7 @@ RUN apk add --no-cache \
     tzdata
 
 # install caddy
-COPY --from=builder /install/caddy /usr/bin/caddy
+COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
 
 # validate install
 RUN /usr/bin/caddy version
@@ -100,7 +94,7 @@ COPY Caddyfile /etc/Caddyfile
 COPY index.html /srv/index.html
 # COPY package.json /etc/package.json
 # install process wrapper
-COPY --from=builder /go/bin/parent /bin/parent
+COPY --from=go-builder /go/bin/parent /bin/parent
 ADD caddy.sh /caddy.sh
 RUN ["chmod", "+x", "/caddy.sh"]
 EXPOSE 443 80

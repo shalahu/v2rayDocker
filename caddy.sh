@@ -27,71 +27,40 @@ else
     aid="$5"
 fi
 
-caddy1() {
-	cat > /etc/Caddyfile <<'EOF'
-	domain
-	{
-	  log ./caddy.log
-	  proxy /onepath :2333 {
-		websocket
-		header_upstream -Origin
-	  }
-	  timeouts none
-	  rewrite {
-	  if_op or
-	  if {file} ends_with .js
-	  if {file} ends_with .log
-	  if {file} ends_with .json
-	  if {uri} starts_with /node_modules/
-	  to /404
-	  }
-	}
-EOF
+cat > /etc/Caddyfile <<'EOF'
+{
+	order reverse_proxy before header
 }
-
-caddy2() {
-	cat > /etc/Caddyfile <<'EOF'
-	{
-	  debug
-	}
-	domain
-	{
-	  log {
+domain {
+	log {
 		output file ./caddy.log {
 		  roll_size 10mb
 		  roll_keep 30
 		  roll_keep_for 72h
 		}
-	  }
-	  tls {
-    	on_demand
-	  }
-	  reverse_proxy /onepath localhost:2333 {
-		header_up Host {host}
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
-		header_up X-Forwarded-Proto {scheme}
-	  }
-	  @blocked {
-		path *.js *.log *.json /node_modules/*
-	  }
-	  respond @blocked 404
-	  file_server
+		level  WARN
 	}
-EOF
+	tls {
+		ciphers TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+        alpn h2 http/1.1
+    	on_demand
+	}
+	@v2ray_ws {
+        path /onepath
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+	reverse_proxy @v2ray_ws 127.0.0.1:2333
+	@blocked {
+		path *.js *.log *.json /node_modules/*
+	}
+	respond @blocked 404
+	file_server
+	header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    }
 }
-
-# vsersion 2.0.0 and above needs to use a new Caddyfile
-caddy_2=false
-if [ "$(echo ${CADDY_VERSION} | cut -c1)" -eq 2 ] 2>/dev/null; then 
-    caddy_2=true
-fi
-
-if $caddy_2; then 
-    caddy2
-else
-	caddy1
-fi
+EOF
 
 sed -i "s/domain/${domain}/" /etc/Caddyfile
 sed -i "s/onepath/${path}/" /etc/Caddyfile
@@ -99,32 +68,55 @@ sed -i "s/onepath/${path}/" /etc/Caddyfile
 # v2ray
 cat > /etc/v2ray/config.json <<'EOF'
 {
-  "inbounds": [
-    {
-      "port": 2333,
-      "protocol": "vmess",
-      "settings": {
-        "clients": [
-          {
-            "id": "uuid",
-            "alterId": 64
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "wsSettings": {
-        "path": "/onepath"
-        }
-      }
-    }
-  ],
-  "outbounds": [
-    {
+	"log": {
+		"loglevel": "warning",
+		"error": "/srv/v2ray_error.log",
+		"access": "/srv/v2ray_access.log"
+	},
+	"inbounds": [{
+		"listen": "127.0.0.1",
+		"port": 2333,
+		"protocol": "vmess",
+		"settings": {
+			"clients": [{
+				"id": "uuid",
+				"alterId": 64
+			}],
+			"disableInsecureEncryption": true
+		},
+		"streamSettings": {
+			"network": "ws",
+			"security": "none",
+			"wsSettings": {
+			"path": "/onepath"
+			}
+		},
+		"sniffing": {
+			"enabled": false,
+			"destOverride": [
+			  "http",
+			  "tls"
+        ]}
+    }],
+	"routing": {
+		"domainStrategy": "IPIfNonMatch",
+		"rules": [{
+			"type": "field",
+			"protocol": [
+				"bittorrent"
+			],
+        "outboundTag": "blocked"
+		}]
+	},
+	"outbounds": [{
       "protocol": "freedom",
       "settings": {}
-    }
-  ]
+    },
+    {
+      "tag": "blocked",
+      "protocol": "blackhole",
+      "settings": {}
+    }]
 }
 EOF
 
@@ -134,8 +126,8 @@ sed -i "s/64/${aid}/" /etc/v2ray/config.json
 
 #https://github.com/2dust/v2rayN/wiki/分享链接格式说明(ver-2)
 cat > /srv/sebs.js <<'EOF'
- {
-    "add":"domain",
+{
+	"add":"domain",
     "aid":"64",
     "host":"domain",
     "id":"uuid",
@@ -146,7 +138,7 @@ cat > /srv/sebs.js <<'EOF'
     "tls":"tls",
     "type":"none",
     "v":"2"
-  }
+}
 EOF
 
 if [ "$psname" != "" ] && [ "$psname" != "-c" ]; then
