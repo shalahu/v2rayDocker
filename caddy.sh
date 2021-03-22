@@ -50,7 +50,7 @@ domain {
         header Connection *Upgrade*
         header Upgrade websocket
     }
-	reverse_proxy @v2ray_ws 127.0.0.1:2333
+	reverse_proxy @v2ray_ws unix//dev/shm/vws.sock
 	@blocked {
 		path *.js *.log *.json /node_modules/*
 	}
@@ -74,8 +74,7 @@ cat > /etc/v2ray/config.json <<'EOF'
 		"access": "/srv/v2ray_access.log"
 	},
 	"inbounds": [{
-		"listen": "127.0.0.1",
-		"port": 2333,
+		"listen": "/dev/shm/vws.sock",
 		"protocol": "vmess",
 		"settings": {
 			"clients": [{
