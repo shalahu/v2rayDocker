@@ -21,8 +21,8 @@ fs.readFile('sebs.js', 'utf8', function (err, data) {
 		console.log(qrcode);
 	});
 	
-	console.log('-----------------默认情况下，执行 "docker exec -i -t v2ray node v2ray.js" 可查看此信息--------------------')
-	console.log('-----------------Run "docker exec -i -t v2ray node v2ray.js" to display this information by default--------------------')
+	console.log('-----------------默认情况下，执行 "docker exec -i -t v2ray node link-qrcode.js" 可查看此信息--------------------')
+	console.log('-----------------Run "docker exec -i -t v2ray node link-qrcode.js" to display this information by default--------------------')
 });
 
 function ios(node) {
