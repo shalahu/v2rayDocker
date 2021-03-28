@@ -89,7 +89,7 @@ domain {
 EOF
 }
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless+tcp+tls)+caddy2/2_Caddyfile
+#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless&trojan+tcp&ws+tls)+caddy2/2_Caddyfile
 caddy_xray_fallbacks() {
   cat > /etc/Caddyfile <<'EOF'
 {
@@ -190,8 +190,8 @@ v2ray_vmess_ws() {
 EOF
 }
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless+tcp+tls)+caddy2/2_v2ray_config.json
-xray_vless_tcp_xtls() {
+#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless&trojan+tcp&ws+tls)+caddy2/2_v2ray_config.json
+xray_trojan_vless_tcp_ws_tls() {
   cat > ${config} <<'EOF'
 {
   "log": {
@@ -208,9 +208,14 @@ xray_vless_tcp_xtls() {
       }],
       "decryption": "none",
 	  "fallbacks": [{
-	      "dest": "/dev/shm/h1h2c.sock",
-	      "xver": 0
-	  }]
+          "dest": "@trojan-tcp",
+          "xver": 0
+        },
+        {
+          "path": "/onepath",
+          "dest": "@vless-ws",
+          "xver": 0
+        }]
     },
     "streamSettings": {
       "network": "tcp",
@@ -235,6 +240,53 @@ xray_vless_tcp_xtls() {
       "destOverride": [
         "http",
         "tls"
+    ]}
+  },
+  {
+    "listen": "@vless-ws",
+    "protocol": "vless",
+    "settings": {
+      "clients": [
+        {
+          "id": "uuid"
+        }],
+      "decryption": "none"
+    },
+    "streamSettings": {
+      "network": "ws",
+      "security": "none",
+      "wsSettings": {
+          "path": "/onepath"
+      }
+    },
+    "sniffing": {
+      "enabled": false,
+      "destOverride": [
+        "http",
+        "tls"
+    ]}
+  },
+  {
+    "listen": "@trojan-tcp",
+    "protocol": "trojan",
+    "settings": {
+      "clients": [{
+            "password":"onepath"
+      }],
+      "fallbacks": [{
+            "dest": "/dev/shm/h1h2c.sock",
+            "xver": 0
+      }]
+    },
+    "streamSettings": {
+        "network": "tcp",
+        "security": "none"
+    },
+    "sniffing": {
+        "enabled": false,
+        "destOverride": [
+          "http",
+          "tls"
     ]}
   }],
   "routing": {
@@ -261,7 +313,7 @@ EOF
 }
 
 if $xray; then
-  xray_vless_tcp_xtls
+  xray_trojan_vless_tcp_ws_tls
 else
   v2ray_vmess_ws
 fi

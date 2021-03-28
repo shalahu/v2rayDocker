@@ -87,6 +87,8 @@ RUN apk upgrade --update \
     && chmod +x /usr/bin/v2ctl \
 	&& unzip /tmp/xray/xray.zip -d /tmp/xray/ \
 	&& mv /tmp/xray/xray /usr/bin \
+	&& mv /tmp/xray/geoip.dat /usr/bin \
+	&& mv /tmp/xray/geosite.dat /usr/bin \
 	&& chmod +x /usr/bin/xray \
     && ln -sf /usr/share/zoneinfo/${SYSTEM_TIME_ZONE} /etc/localtime \
     && echo ${SYSTEM_TIME_ZONE} > /etc/timezone \
