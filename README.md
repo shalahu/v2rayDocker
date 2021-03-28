@@ -1,12 +1,12 @@
 [中文](#功能简介 "中文") | [English](#Features "English")
 
-# v2rayDocker = v2ray/xray + caddy2 + ws + tls + qrcode
+# v2rayDocker = v2ray + ws + tls + caddy2 + qrcode / xray + tcp + xtls + caddy2 + qrcode
 
 ## 功能简介
 * 使用共享内存高效进程转发（相比较与端口转发）
-* 同时支持 v2ray/xray，默认 xray 作为 core_type
+* 同时支持 v2ray（ws + tls）和 xray（tcp + xtls），默认 xray 作为 core_type
 * 自动生成 user_id、 ws_path 和 user_alertId，也支持自定义
-* 默认使用 caddy2 自动生成证书
+* 与 v2ray 搭配时，默认使用 caddy2 自动生成证书
 * 自动生成 安卓 v2rayNG vmess 链接和二维码
 * 自动生成 iOS shadowrocket vmess 链接和二维码
 * 已屏蔽非相关文件的访问
@@ -25,6 +25,7 @@
 * 提前准备
   #####  1. 给域名，如 www.yourdomain.com，添加 A 记录，确保正确解析到 Docker 所在服务器的 IP 地址。具体设置方法可参看：https://help.aliyun.com/knowledge_detail/29725.html
   #####  2. 确认运行环境 80 和 443 端口未被占用。可运行 lsof -i:80 和 lsof -i:443 检查。
+  #####  3. 当选择 xray（tcp + xtls）是确保 Docker 所在服务器 $HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt 和 $HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key 两个文件存在（ws_domain 需替换成自己的域名），这个两个文件可通过运行一次 v2ray（ws + tls）从 letsencrypt 自动获取或从其他位置复制。
 * 安装 Docker 
   ```
   curl -fsSL https://get.docker.com -o get-docker.sh  && \
@@ -50,7 +51,7 @@
   ```
   sudo docker stop v2ray
   ```
-* 查看链接和二维码
+* 查看链接和二维码（注意：VLESS 并没有正式的链接和二维码标准，使用前仍需手动修改）
   ```
   docker exec -i -t v2ray node link-qrcode.js
   ```  
@@ -59,16 +60,16 @@
 
 ---
 
-# v2rayDocker = v2ray/xray + caddy2 + ws + tls + qrcode
+# v2rayDocker = v2ray + ws + tls + caddy2 + qrcode / xray + tcp + xtls + caddy2 + qrcode
 
 ## Features
 
 * Use Shared Memory high performance process forwarding (comparing to port forwarding)
-* Supporting both v2ray and xray, takes xray as core_type by default 
+* Supporting both v2ray (ws + tls) and xray (tcp + xtls), takes xray as core_type by default 
 * Auto generate user_id, ws_path and user_alertId，which also can be customized
-* Auto generate CA by caddy2 
-* Auto generate vmess link and qrcode for v2rayNG on Android
-* Auto generate vmess link and qrcode for shadowrocket on iOS
+* Auto generate CA by caddy2 when working with v2ray
+* Auto generate vmess link and QR code for v2rayNG on Android
+* Auto generate vmess link and QR code for shadowrocket on iOS
 * Block access from nonessential files
 
 ## Module Verions
@@ -85,6 +86,7 @@
 * Prerequisites
   #####  1. Create an A record for the domain, e.g. www.yourdomain.com, with the IP of docker server.  
   #####  2. port 80 and 443 should be available, check them with lsof -i:80 and lsof -i:443 on the server.
+  #####  3. Make sure both $HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt and $HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key exist on docker server when choose xray (tcp + xtls, replace ws_domain with your domain), could get these 2 files from letsencrypt with running v2ray (ws + tls) once or just copying from other locations.
 * Install Docker 
   ```
   curl -fsSL https://get.docker.com -o get-docker.sh  && \
@@ -110,7 +112,7 @@
   ```
   sudo docker stop v2ray
   ```
-* Display links and qrcodes
+* Display links and QR codes (Attention: There is no official standards for VLESS link or QR code, you need modify it manually before use)
   ```
   docker exec -i -t v2ray node link-qrcode.js
   ```  

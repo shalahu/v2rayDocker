@@ -1,21 +1,27 @@
 ARG CADDY_VERSION="2.3.0"
 ARG GOLANG_IMAGE_VERSION="1.16.2-alpine"
 ARG ALPINE_IMAGE_VERSION="3.13"
+ARG TROJAN_GO_IMAGE_VERSION="0.8.2"
 
 #
-# Caddy stage
+# caddy stage
 #
 FROM caddy:${CADDY_VERSION}-alpine as caddy-builder
 
 #
-# Go stage
+# go stage
 #
 FROM golang:${GOLANG_IMAGE_VERSION} as go-builder
 
 RUN go get -v github.com/abiosoft/parent
 
 #
-# Final stage
+# trojan-go stage
+#
+FROM teddysun/trojan-go:${TROJAN_GO_IMAGE_VERSION} as trojan-go-builder
+
+#
+# final stage
 #
 FROM alpine:${ALPINE_IMAGE_VERSION}
 
@@ -32,6 +38,9 @@ ENV GOLANG_IMAGE_VERSION="$GOLANG_IMAGE_VERSION"
 
 ARG ALPINE_IMAGE_VERSION
 ENV ALPINE_IMAGE_VERSION="$ALPINE_IMAGE_VERSION"
+
+ARG TROJAN_GO_IMAGE_VERSION
+ENV TROJAN_GO_IMAGE_VERSION="$TROJAN_GO_IMAGE_VERSION"
 
 # v2ray
 ARG V2RAY_VERSION
@@ -89,6 +98,13 @@ WORKDIR /srv
 COPY package.json /srv/package.json
 RUN npm install
 COPY link-qrcode.js /srv/link-qrcode.js
+
+# copy trojan-go
+
+COPY --from=trojan-go-builder /usr/bin/trojan-go /usr/bin/trojan-go
+
+# validate trojan-go
+RUN /usr/bin/trojan-go -version 
 
 # copy caddy
 COPY --from=caddy-builder /usr/bin/caddy /usr/bin/caddy
