@@ -56,6 +56,15 @@ ENV XRAY_INSTALL_VERSION=${XRAY_VERSION:-"1.4.0"}
 ARG XRAY_GITHUB="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_INSTALL_VERSION}/Xray-linux-64.zip"
 ARG XRAY_FAST_GIT="https://download.fastgit.org/XTLS/Xray-core/releases/download/v${XRAY_INSTALL_VERSION}/Xray-linux-64.zip"
 
+# geosite
+
+ARG GEOSITE_GITHUB="https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
+ARG GEOSITE_FAST_GIT="https://hub.fastgit.org/v2fly/domain-list-community/releases/latest/download/dlc.dat"
+
+# geoip
+ARG GEOIP_GITHUB="https://github.com/v2fly/geoip/releases/latest/download/geoip.dat"
+ARG GEOIP_FAST_GIT="https://hub.fastgit.org/v2fly/geoip/releases/latest/download/geoip.dat"
+
 ARG TIME_ZONE 
 ENV SYSTEM_TIME_ZONE=${TIME_ZONE:-"Asia/Shanghai"}
 
@@ -87,8 +96,8 @@ RUN apk upgrade --update \
     && chmod +x /usr/bin/v2ctl \
 	&& unzip /tmp/xray/xray.zip -d /tmp/xray/ \
 	&& mv /tmp/xray/xray /usr/bin \
-	&& mv /tmp/xray/geoip.dat /usr/bin \
-	&& mv /tmp/xray/geosite.dat /usr/bin \
+	&& if [ "$LOCAL_MODE" = "false" ]; then wget --no-cache -O /usr/bin/geosite.dat ${GEOSITE_GITHUB}; else wget --no-cache -O /usr/bin/geosite.dat ${GEOSITE_FAST_GIT}; fi \
+	&& if [ "$LOCAL_MODE" = "false" ]; then wget --no-cache -O /usr/bin/geoip.dat ${GEOIP_GITHUB}; else wget --no-cache -O /usr/bin/geoip.dat ${GEOIP_FAST_GIT}; fi \
 	&& chmod +x /usr/bin/xray \
     && ln -sf /usr/share/zoneinfo/${SYSTEM_TIME_ZONE} /etc/localtime \
     && echo ${SYSTEM_TIME_ZONE} > /etc/timezone \

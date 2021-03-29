@@ -9,28 +9,28 @@ bin="xray"
 
 if [ ! "$3" ] ;then
   uuid=$(uuidgen)
-  echo "uuid 将会随机生成为 ${uuid}"
+  echo "uuid 将会随机生成为 ${uuid} / uuid will be randomly generated to ${uuid}"
 else
   uuid="$3"
 fi
 
 if [ ! "$4" ] ;then
   path=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 8 | head -n 1)
-  echo "ws path 将会随机生成为 ${path}"
+  echo "ws_path 和 trojan_password 将会随机生成为 ${path} / ws_path and trojan_password will be randomly generated to ${path}"
 else
   path="$4"
 fi
 
 if [ ! "$5" ] ;then
   aid=$(shuf -i 30-100 -n 1)
-  echo "alertId 将会随机生成为 ${aid}"
+  echo "alertId 将会随机生成为 ${aid} / alertId will be randomly generated to ${aid}"
 else
   aid="$5"
 fi
 
 if [ ! "$6" ] ;then
   bin="xray"
-  echo "bin 将默认为 ${bin}"
+  echo "bin 将默认为 ${bin} / bin will be ${bin} by default"
 else
   bin="$6"
 fi
@@ -39,19 +39,27 @@ xray=true
 ntwork="tcp"
 sectls="xtls"
 desc="xray(VLESS+${ntwork}+${sectls})+caddy2"
-if [ "$bin" != "xray" ]; then
-  xray=false
-  ntwork="ws"
-  sectls="tls"
-  desc="v2ray(vmess+${ntwork}+${sectls})+caddy2"
+trojan=false
+
+if [[ "$bin" == *ray ]]; then
+  if [ "$bin" != "xray" ]; then
+    xray=false
+    ntwork="ws"
+    sectls="tls"
+    desc="v2ray(vmess+${ntwork}+${sectls})+caddy2"
+  else
+    aid="0"
+  fi
 else
-  aid="0"
+  trojan=true
+  xray=false
+  sectls="tls"
+  desc="trojan(${ntwork}+${sectls})+caddy2"
 fi
 
 config="/srv/${bin}_config.json"
 cp /etc/v2ray/config.json ${config}
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless%5Cvmess%2Bws)%2Bcaddy2%5Cnginx/2_Caddyfile
 caddy_v2ray_ws() {
   cat > /etc/Caddyfile <<'EOF'
 {
@@ -89,8 +97,7 @@ domain {
 EOF
 }
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless&trojan+tcp&ws+tls)+caddy2/2_Caddyfile
-caddy_xray_fallbacks() {
+caddy_fallback_shared_momery() {
   cat > /etc/Caddyfile <<'EOF'
 {
   servers unix//dev/shm/h1h2c.sock {
@@ -124,8 +131,44 @@ caddy_xray_fallbacks() {
 EOF
 }
 
+caddy_fallback_sock() {
+  cat > /etc/Caddyfile <<'EOF'
+{
+  servers 127.0.0.1:88 {
+    protocol {
+      allow_h2c
+    }
+  }
+}
+:80 {
+  redir https://{host}{uri} permanent
+}
+:88 {
+  bind 127.0.0.1
+  log {
+    output file ./caddy.log {
+      roll_size 10mb
+      roll_keep 30
+      roll_keep_for 72h
+    }
+    level  WARN
+  }
+  @blocked {
+    path *.js *.log *.json /node_modules/*
+  }
+  respond @blocked 404
+  file_server
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  }
+}
+EOF
+}
+
 if $xray; then
-  caddy_xray_fallbacks
+  caddy_fallback_shared_momery
+elif $trojan; then
+  caddy_fallback_sock
 else
   caddy_v2ray_ws
 fi
@@ -133,7 +176,6 @@ fi
 sed -i "s/domain/${domain}/" /etc/Caddyfile
 sed -i "s/onepath/${path}/" /etc/Caddyfile
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless%5Cvmess%2Bws)%2Bcaddy2%5Cnginx/2_v2ray_vmess_config.json
 v2ray_vmess_ws() {
   cat > ${config} <<'EOF'
 {
@@ -190,7 +232,6 @@ v2ray_vmess_ws() {
 EOF
 }
 
-#https://github.com/lxhao61/integrated-examples/blob/master/v2ray(vless&trojan+tcp&ws+tls)+caddy2/2_v2ray_config.json
 xray_trojan_vless_tcp_ws_tls() {
   cat > ${config} <<'EOF'
 {
@@ -312,8 +353,79 @@ xray_trojan_vless_tcp_ws_tls() {
 EOF
 }
 
+trojan_tcp_tls() {
+  cat > ${config} <<'EOF'
+{
+  "run_type": "server",
+  "local_addr": "0.0.0.0",
+  "local_port": 443,
+  "remote_addr": "127.0.0.1",
+  "remote_port": 88,
+  "log_level": 2,
+  "log_file": "/srv/v2ray_error.log",
+  "password": [
+    "onepath"
+  ],
+  "disable_http_check": false,
+  "udp_timeout": 60,
+  "ssl": {
+    "verify_hostname": true,
+    "cert": "/root/.caddy/acme/acme-v02.api.letsencrypt.org/sites/full_domain/full_domain.crt",
+    "key": "/root/.caddy/acme/acme-v02.api.letsencrypt.org/sites/full_domain/full_domain.key",
+    "key_password": "",
+    "cipher": "",
+    "curves": "",
+    "prefer_server_cipher": true,
+    "sni": "full_domain",
+    "alpn":[
+      "h2",
+      "http/1.1"
+    ],
+    "session_ticket": true,
+    "reuse_session": true,
+    "plain_http_response": "",
+    "fallback_addr": "",
+    "fallback_port": 0
+  },
+  "tcp": {
+    "no_delay": true,
+    "keep_alive": true,
+    "prefer_ipv4": false
+  },
+  "router": {
+    "enabled": true,
+    "block": [
+      "geoip:private"
+    ],
+    "geoip": "/usr/bin/geoip.dat",
+    "geosite": "/usr/bin/geosite.dat"
+  },
+  "websocket": {
+    "enabled": false,
+    "path": "/onepath",
+    "host": "full_domain"
+  },
+  "shadowsocks": {
+    "enabled": false,
+    "method": "AES-128-GCM",
+    "password": ""
+  },
+  "transport_plugin": {
+    "enabled": false,
+    "type": "plaintext",
+    "command": "",
+    "option": "",
+    "arg": [],
+    "env": []
+  }
+}
+EOF
+}
+
 if $xray; then
   xray_trojan_vless_tcp_ws_tls
+elif $trojan; then
+  trojan_tcp_tls
 else
   v2ray_vmess_ws
 fi
@@ -375,7 +487,9 @@ echo " "
 cat ${config}
 echo " "
 
-node link-qrcode.js
+if ! $trojan; then
+  node link-qrcode.js
+fi
 
 echo " "
 echo "当前选择是: ${desc} / Current selection: ${desc}"
@@ -385,6 +499,8 @@ fi
 
 if $xray; then
   /usr/bin/xray -config ${config}
+elif $trojan; then
+  /usr/bin/trojan-go -config ${config}
 else
   /usr/bin/v2ray -config ${config}
 fi
