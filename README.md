@@ -66,7 +66,7 @@
   ##### 5. 默认 core_type 为 xray，可选 v2ray 或 trojan。
   ##### 6. 完整示例： 
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 v2ray && sleep 3s && sudo docker logs v2ray
   ```
 * 查看 Docker
   ```
@@ -151,7 +151,7 @@
   ##### 5. Take xray as core_type by default, could repalce it by v2ray or trojan.
   ##### 6. Full example:
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 v2ray && sleep 3s && sudo docker logs v2ray
   ```
 * Check Docker
   ```
