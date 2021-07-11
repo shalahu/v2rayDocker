@@ -1,7 +1,7 @@
-ARG CADDY_VERSION="2.3.0"
-ARG GOLANG_IMAGE_VERSION="1.16.2-alpine"
-ARG ALPINE_IMAGE_VERSION="3.13"
-ARG TROJAN_GO_IMAGE_VERSION="0.8.2"
+ARG CADDY_VERSION="2.4.3"
+ARG GOLANG_IMAGE_VERSION="1.16.5-alpine"
+ARG ALPINE_IMAGE_VERSION="3.14"
+ARG TROJAN_GO_IMAGE_VERSION="0.10.4"
 
 #
 # caddy stage
@@ -31,7 +31,7 @@ ENV LOCAL_MODE=${LOCAL_MODE:-"false"}
 RUN if [ "${LOCAL_MODE}" = "true" ]; then sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories; fi
 
 ARG CADDY_VERSION
-ENV CADDY_INSTALL_VERSION=${CADDY_VERSION:-"2.3.0"}
+ENV CADDY_INSTALL_VERSION=${CADDY_VERSION:-"2.4.3"}
 
 ARG GOLANG_IMAGE_VERSION
 ENV GOLANG_IMAGE_VERSION="$GOLANG_IMAGE_VERSION"
@@ -44,14 +44,14 @@ ENV TROJAN_GO_IMAGE_VERSION="$TROJAN_GO_IMAGE_VERSION"
 
 # v2ray
 ARG V2RAY_VERSION
-ENV V2RAY_INSTALL_VERSION=${V2RAY_VERSION:-"4.36.2"}
+ENV V2RAY_INSTALL_VERSION=${V2RAY_VERSION:-"4.40.1"}
 
 ARG V2RAY_GITHUB="https://github.com/v2fly/v2ray-core/releases/download/v${V2RAY_INSTALL_VERSION}/v2ray-linux-64.zip"
 ARG V2RAY_FAST_GIT="https://download.fastgit.org/v2fly/v2ray-core/releases/download/v${V2RAY_INSTALL_VERSION}/v2ray-linux-64.zip"
 
 # xray
 ARG XRAY_VERSION
-ENV XRAY_INSTALL_VERSION=${XRAY_VERSION:-"1.4.0"}
+ENV XRAY_INSTALL_VERSION=${XRAY_VERSION:-"1.4.2"}
 
 ARG XRAY_GITHUB="https://github.com/XTLS/Xray-core/releases/download/v${XRAY_INSTALL_VERSION}/Xray-linux-64.zip"
 ARG XRAY_FAST_GIT="https://download.fastgit.org/XTLS/Xray-core/releases/download/v${XRAY_INSTALL_VERSION}/Xray-linux-64.zip"
@@ -75,7 +75,7 @@ RUN apk upgrade --update \
         tzdata \
 		util-linux \
 		nodejs \
-		nodejs-npm \
+		npm \
 		ca-certificates \
 		git \
 		mailcap \

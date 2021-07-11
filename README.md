@@ -7,7 +7,7 @@
 * 同时支持三种核心（默认 xray 作为 core_type）： 
 	- v2ray（vmess + ws + tls）
 	- xray（VLESS + tcp + xtls & VLESS + ws + tls & trojan + tcp + tls，三种协议同时运行）
-	- trojan （trojan + tcp + tls），
+	- trojan（trojan + tcp + tls），
 * 自动生成 user_id、 ws_path （ws_path 亦是 trojan_password） 和 user_alertId （仅限 vmess），也支持自定义
 * 与 v2ray 搭配时，默认使用 caddy2 自动生成证书
 * 自动生成 安卓 v2rayNG vmess 链接和二维码
@@ -17,29 +17,48 @@
 
 ## 组件版本
 
-* dockerhub: c258c4fff5f9/v2ray_ws:v0.9.3
-* v2ray: v4.36.2
-* xray: v1.4.0
-* trojan-go: v0.8.2
-* Caddy: v2.3.0
-* alpine: v3.13
-* golang: v1.16.2
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.9.4
+* v2ray: v4.40.1
+* xray: v1.4.2
+* trojan-go: v0.10.4
+* Caddy: v2.4.3
+* alpine: v3.14
+* golang: v1.16.5
 
 ## 使用方法
 
 * 提前准备
   #####  1. 给域名，如 www.yourdomain.com，添加 A 记录，确保正确解析到 Docker 所在服务器的 IP 地址。具体设置方法可参看：https://help.aliyun.com/knowledge_detail/29725.html
   #####  2. 确认运行环境 80 和 443 端口未被占用。可运行 lsof -i:80 和 lsof -i:443 检查。
-  #####  3. 当选择 xray （搭配 trojan 协议） 或 trojan 时确保 Docker 所在服务器 "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt" 和 "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key" 两个文件存在（ws_domain 需替换成自己的域名），这个两个文件可通过运行一次 v2ray（ws + tls）从 letsencrypt 自动获取或从其他位置复制。
+  #####  3. 当选择 xray （搭配 trojan 协议） 或 trojan 时确保 Docker 所在服务器存在以下两个文件（路径中的 ws_domain 需替换成自己的域名）
+  ```
+  "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt"
+  ```
+  ```
+  "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key"
+  ```
+  #####  否则会出现
+  ```
+  Error: No such container: v2ray
+  ```
+  #####  这个两个文件可通过运行一次 v2ray（vmess + ws + tls）从 letsencrypt 自动获取（或从其他位置复制）。
+  #####  确保 v2ray 可以正常运行后，进入 docker
+  ```
+  docker exec -i -t v2ray bash
+  ```
+  #####  将证书复制到指定位置（路径中的 www.yourdomain.com 需替换成自己的域名）。注意：此操作是将 Docker 内的证书文件复制到和 Docker 所在服务器共享的文件夹中，以便留作后用。因此，启动 docker 前，需将 SELinux 设为 permissive 模式。
+  ```
+  cp -r $HOME/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/www.yourdomain.com /root/.caddy/acme/acme-v02.api.letsencrypt.org/sites
+  ```
+  #####  复制完成后，便可停掉当前 docker，并选择其他核心了。
 * 安装 Docker 
   ```
-  curl -fsSL https://get.docker.com -o get-docker.sh  && \
-  bash get-docker.sh
+  curl -fsSL https://get.docker.com -o get-docker.sh && bash get-docker.sh
   ```
 * 启动 Docker
   ##### 1. 命令行参数：
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.3 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path/trojan_password(path)] [user_alertId(aid)] [core_type(bin)] && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path/trojan_password(path)] [user_alertId(aid)] [core_type(bin)] && sleep 3s && sudo docker logs v2ray
   ```
   ##### 2. 务必将 ws_domain 替换成自己的域名，如 www.yourdomain.com。
   ##### 3. 可留空（将会自动生成）或自行替换 user_id （如 0890b53a-e3d4-4726-bd2b-52574e8588c4）、 ws_path （如 3o38nn5h）和 user_alertId (如 0，仅限 vmess)。
@@ -47,7 +66,7 @@
   ##### 5. 默认 core_type 为 xray，可选 v2ray 或 trojan。
   ##### 6. 完整示例： 
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.3 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
   ```
 * 查看 Docker
   ```
@@ -83,29 +102,48 @@
 
 ## Module Verions
 
-* dockerhub: c258c4fff5f9/v2ray_ws:v0.9.3
-* v2ray: v4.36.2
-* xray: v1.4.0
-* trojan-go: v0.8.2
-* Caddy: v2.3.0
-* alpine: v3.13
-* golang: v1.16.2
+* dockerhub: c258c4fff5f9/v2ray_ws:v0.9.4
+* v2ray: v4.40.1
+* xray: v1.4.2
+* trojan-go: v0.10.4
+* Caddy: v2.4.3
+* alpine: v3.14
+* golang: v1.16.5
 
 ## How To Run
 
 * Prerequisites
   #####  1. Create an A record for the domain, e.g. www.yourdomain.com, with the IP of docker server.  
   #####  2. port 80 and 443 should be available, check them with lsof -i:80 and lsof -i:443 on the server.
-  #####  3. Make sure both "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt" and "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key" exist on docker server when choose xray (with trojan protocol) or trojan, replace ws_domain with your domain, could get these 2 files from letsencrypt with running v2ray (ws + tls) once or just copying from other locations.
+  #####  3. Make sure both files (replace ws_domain in the path with your domain), as follows, exist on docker server when choose xray (with trojan protocol) or trojan
+  ```
+  "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.crt"
+  ```
+  ```
+  "$HOME/.caddy/acme/acme-v02.api.letsencrypt.org/sites/ws_domain/ws_domain.key"
+  ```
+  #####  otherwise you will see
+  ```
+  Error: No such container: v2ray
+  ```
+  #####  you could get these 2 files from letsencrypt with running v2ray (vmess + ws + tls) once (or just copying from other locations).
+  #####  after v2ray running properly, enter docker
+  ```
+  docker exec -i -t v2ray bash
+  ```
+  #####  Copy those 2 file to target locations (replace www.yourdomain.com in the path with your domain). Note：this procedure will copy certificates files from docker inside into a folder shared with docker server outside, so files can be kept and reused later. Must set SELinux to permissive model before start docker.
+  ```
+  cp -r $HOME/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/www.yourdomain.com /root/.caddy/acme/acme-v02.api.letsencrypt.org/sites
+  ```
+  #####  After copy, current docker can be stopped and continue with other core types.
 * Install Docker 
   ```
-  curl -fsSL https://get.docker.com -o get-docker.sh  && \
-  bash get-docker.sh
+  curl -fsSL https://get.docker.com -o get-docker.sh && bash get-docker.sh
   ```
 * Start Docker
   ##### 1. Command line arguments:
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.3 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path/trojan_password(path)] [user_alertId(aid)] [core_type(bin)] && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 ws_domain(add/host) ws_name(ps) [user_id(id)] [ws_path/trojan_password(path)] [user_alertId(aid)] [core_type(bin)] && sleep 3s && sudo docker logs v2ray
   ```
   ##### 2. Must replace ws_domain with your domain, e.g. www.yourdomain.com.
   ##### 3. Keep user_id (e.g. 0890b53a-e3d4-4726-bd2b-52574e8588c4), ws_path (e.g. 3o38nn5h) and user_alertId (e.g. 0, only for vmess) empty (which will be auto-generated) or replace them by your own.
@@ -113,7 +151,7 @@
   ##### 5. Take xray as core_type by default, could repalce it by v2ray or trojan.
   ##### 6. Full example:
   ```
-  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.3 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
+  sudo docker run -d --rm --name v2ray -p 443:443 -p 80:80 -v $HOME/.caddy:/root/.caddy c258c4fff5f9/v2ray_ws:v0.9.4 www.yourdomain.com V2RAY_WS 0890b53a-e3d4-4726-bd2b-52574e8588c4 3o38nn5h 0 xray && sleep 3s && sudo docker logs v2ray
   ```
 * Check Docker
   ```
